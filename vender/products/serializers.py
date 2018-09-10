@@ -10,7 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
         owner = serializers.ReadOnlyField(source='owner.username')
 
 class UserSerializer(serializers.ModelSerializer):
-    products = serializers.PrimaryKeyRelatedField(many=True, queryset=Product.objects.all())
+    products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
