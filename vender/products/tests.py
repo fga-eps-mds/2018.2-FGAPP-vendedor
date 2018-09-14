@@ -20,7 +20,6 @@ class CheckProductRegisterTest(APITestCase):
 
         self.client = APIClient()
 
-
     
     def test_register_product(self):
         #Login with first user:
@@ -34,51 +33,55 @@ class CheckProductRegisterTest(APITestCase):
         self.assertEqual(first_response.status_code, 201)
 
         self.assertEqual(first_response.data["title"], prod["title"])
-
+        self.assertEqual(first_response.data["description"], prod["description"])
+        self.assertEqual(float(first_response.data["price"]), prod["price"])
+        self.assertEqual(first_response.data["quantity"], prod["quantity"])
 
         #Checking GET
         get_response = self.client.get('/products/')
         self.assertEqual(first_response.status_code, 201)
         self.assertEqual( get_response.data[0]["title"], prod["title"])
         self.assertEqual( get_response.data[0]["description"], prod["description"])
+        self.assertEqual( float(get_response.data[0]["price"]), prod["price"])
+        self.assertEqual( get_response.data[0]["quantity"], prod["quantity"])
 
         
-        #Changing user to 'anothe_user'
-        self.client.force_authenticate(user=self.another_user)
-
-        # print(first_response.data)
+    def test_products_get_details(self):
+        #Login with first user:
+        self.client.force_authenticate(user=self.first_user)
+        #Create a 'product' to post
+        prod = {'title':'food','description':'this is a description','price':12.34, 'quantity':2}
+        #Post on first_user
+        first_response = self.client.post('/products/', prod)
 
         #Check get one product
         get_response = self.client.get('/products/' + str(first_response.data['id']) + '/')
         self.assertEqual(first_response.status_code, 201)
-        
-        #print('Status code of second-test get: ' + str(get_response.status_code))
+
+        self.assertEqual(get_response.data["title"], prod["title"])
+        self.assertEqual(get_response.data["description"], prod["description"])
+        self.assertEqual(float(get_response.data["price"]), prod["price"])
+        self.assertEqual(get_response.data["quantity"], prod["quantity"])
+    
+    def test_products_permission(self):
+        #Login with first user:
+        self.client.force_authenticate(user=self.first_user)
+        #Create a 'product' to post
+        prod = {'title':'food','description':'this is a description','price':12.34, 'quantity':2}
+        #Post on first_user
+        first_response = self.client.post('/products/', prod)
+
+
+        #Changing user to 'anothe_user':
+        self.client.force_authenticate(user=self.another_user)
 
         #Check permissions: Try to delete a product of the first User
         delete_response = self.client.delete('/products/' + str(first_response.data['id']) + '/')
-        self.assertNotEqual(delete_response.status_code, 201)
-
-        # #Uncomment to see the status_code of fail delete
-        # print('Status code of fail delete: ' + str(delete_response.status_code))
-
-        # #Uncomment to see products data
-        # print("")
-        # get_response = self.client.get('/products/')
-        # print("")
-
-        # print("")
-        # print("Products after fail delete" + str(get_response.data))
-        # print("")
+        self.assertNotEqual(delete_response.status_code, 204)
 
         #Back to first user
         self.client.force_authenticate(user=self.first_user)
         delete_response = self.client.delete('/products/' + str(first_response.data['id']) + '/')
         self.assertEqual(delete_response.status_code, 204)
 
-        # #Visual confirmation (comment that)
-        # get_response = self.client.get('/products/')
-
-        # print("")
-        # print("Products after fail delete" + str(get_response.data))
-        # print("")
 
