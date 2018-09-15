@@ -53,10 +53,11 @@ class CheckProductRegisterTest(APITestCase):
         prod = {'title':'food','description':'this is a description','price':12.34, 'quantity':2}
         #Post on first_user
         first_response = self.client.post('/products/', prod)
+        self.assertEqual(first_response.status_code, 201)
 
         #Check get one product
         get_response = self.client.get('/products/' + str(first_response.data['id']) + '/')
-        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(get_response.status_code, 200)
 
         self.assertEqual(get_response.data["title"], prod["title"])
         self.assertEqual(get_response.data["description"], prod["description"])
